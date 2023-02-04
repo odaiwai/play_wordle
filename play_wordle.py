@@ -9,7 +9,7 @@ import sys
 import re
 import json
 import requests
-
+import numpy as np
 
 def printerror(msg):
     """
@@ -80,6 +80,13 @@ def summarise_list(my_list):
           f'{my_list[:5]}...{my_list[-5:]}')
 
 
+def process_ambers():
+    """
+    Process the parameters to provide a list of ambers as:
+        []
+    """
+
+
 def main():
     """
         Main routine.
@@ -93,41 +100,64 @@ def main():
     # 3.
     green_list = list(params['green'])
     amber_list = ['', '', '', '', '', '']
+    amber_letters = []
     for amber in params['amber']:
-        # these are of the form: a[1-5]+, 1 more than array index
-        ambers = list(amber)
-        letter = ambers[0]
-        positions = [int(p) for p in ambers[1:]]
+        # these are of the form: '[a-z][1-5]+', 1 more than array index
+        letter = amber[0:1]
+        amber_letters.append(letter)
+        positions = [int(p) for p in list(amber[1:])]
         for position in positions:
             amber_list[position-1] += f'^{letter}'
     print(amber_list)
-    # need individual greps for each of the amber letters
-    # FIXME!
+
+    # Make the Regular Expression:
     regex_list = []
-    # print(green_list, amber_list)
+    # print(green_list, amber_list, chars)
     for green, amber in zip(green_list, amber_list):
         # print(green, amber)
-        if green == '.':
+        if len(amber) > 0:
+            # print(f'AMBER: adding [{amber}]')
             regex_list.append(f'[{amber}]')
         else:
+            # print(f'GREEN: adding {green}')
             regex_list.append(green)
     regexp = ''.join(regex_list)
-    print(f'Searching for {regexp}...')
+    ambers = ''.join(amber_letters)
+    print(f'Searching for /{regexp}/, must include all of [{ambers}].')
 
+    # Make the list of remaining possible words:
     possible = []
     for word in words:
+        word_is_possible = False
         if re.search(rf'^{regexp}$', word):
+            word_is_possible = True
+        amber_matches = len(re.findall(rf'[{ambers}]', word))
+        if amber_matches < len(ambers):
+            # verdict += f' Not enough /{ambers}/ ({amber_matches}).'
+            word_is_possible = False
+        if word_is_possible:
             possible.append(word)
             # print (word, possible)
 
     summarise_list(possible)
+    remaining = possible
+    black_letters = params['black']
+    print(f'Can\'t include /{black_letters}/')
     for word in possible:
-        if re.search(r'[A-Z{}.-]'.format(params['black']), word):
-            possible.remove(word)
-    print(f'Possible ({len(possible)}):{possible}')
+        verdict = f'{word}:'
+        if re.search(rf'[A-Z{black_letters}.-]', word):
+            verdict += f' Includes one of /{black_letters}/.'
+            # print(f'{verdict}: Removing')
+            remaining.remove(word)
+        # else:
+        #     print(f'{verdict} Keeping.')
+    print(f'Remaining ({len(remaining)}):\n{np.array(remaining)}')
 
 
-if __name__ == '__main__':
+def parse_params():
+    """
+    Parse the parameters
+    """
     # Parse the command line for:
     # -g, --green - right letters in the right place: s...k, once only
     # -a, --amber - right letters in the wrong place, can be repeated
@@ -138,19 +168,23 @@ if __name__ == '__main__':
               }
     options = sys.argv[1:]
     while len(options) > 0:
-        arg = options[0]
-        val = options[1]
+        arg, value = options[0], options[1]
         options = options[2:]
-        if arg == '-g' or arg == '--green':
-            if len(val) == 5:
-                params['green'] = val
+        if arg in ['-g', '--green']:
+            if len(value) == 5:
+                params['green'] = value
             else:
                 printerror('Strictly 5 letters!')
-        if arg == '-a' or arg == '--amber':
-            params['amber'].append(val)
+        if arg in ['-a', '--amber']:
+            params['amber'].append(value)
 
-        if arg == '-b' or arg == '--black':
-            params['black'] += val
-    print(f'Parameters: {params}')
+        if arg in ['-b', '--black']:
+            params['black'] += value
+    print('Parameters: ', json.dumps(params, indent=4))
+    return params
+
+
+if __name__ == '__main__':
+    params = parse_params()
     main()
 
