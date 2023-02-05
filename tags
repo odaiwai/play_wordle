@@ -10,8 +10,8 @@
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	5.9.0	//
 Play Wordle	Readme.md	/^# Play Wordle$/;"	c
+import_system_words	play_wordle.py	/^def import_system_words():$/;"	f
 import_wordle_words	play_wordle.py	/^def import_wordle_words():$/;"	f
-import_words	play_wordle.py	/^def import_words():$/;"	f
 main	play_wordle.py	/^def main():$/;"	f
 np	play_wordle.py	/^import numpy as np$/;"	I	nameref:module:numpy
 params	play_wordle.py	/^    params = parse_params()$/;"	v

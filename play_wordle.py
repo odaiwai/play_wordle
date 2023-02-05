@@ -19,7 +19,7 @@ def printerror(msg):
     sys.exit()
 
 
-def import_words():
+def import_system_words():
     """
     Import all 5 letter words from the system Dictionary
     """
@@ -91,7 +91,8 @@ def main():
     """
         Main routine.
     """
-    words = import_words()
+    words = import_system_words()
+    # words = import_wordle_words()
     summarise_list(words)
     # wordle_words = import_wordle_words()
     #
@@ -122,7 +123,7 @@ def main():
             # print(f'GREEN: adding {green}')
             regex_list.append(green)
     regexp = ''.join(regex_list)
-    ambers = ''.join(amber_letters)
+    ambers = ''.join(set(amber_letters))
     print(f'Searching for /{regexp}/, must include all of [{ambers}].')
 
     # Make the list of remaining possible words:
@@ -151,6 +152,7 @@ def main():
             remaining.remove(word)
         # else:
         #     print(f'{verdict} Keeping.')
+    # using numpy to format a list *might* be overkill
     print(f'Remaining ({len(remaining)}):\n{np.array(remaining)}')
 
 
@@ -162,6 +164,7 @@ def parse_params():
     # -g, --green - right letters in the right place: s...k, once only
     # -a, --amber - right letters in the wrong place, can be repeated
     # -b, --black - wrong letters: list of the wrong letters, can be repeater
+    # FIXME: Aggregate multiple instances of the same letter?
     params = {'green': '.....',
               'amber': [],
               'black': ''
