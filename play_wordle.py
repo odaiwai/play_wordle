@@ -11,6 +11,7 @@ import json
 import requests
 import numpy as np
 
+
 def printerror(msg):
     """
     Print and error message and quit
@@ -72,12 +73,12 @@ def import_wordle_words():
     return words
 
 
-def summarise_list(my_list):
+def summarise_list(caption, my_list):
     """
     Summarise a list with the length, first and last elements
     """
-    print(f'Possible Words ({len(my_list)}):',
-          f'{my_list[:5]}...{my_list[-5:]}')
+    print(f'{caption} ({len(my_list)}):',
+          f'{my_list[:5]} ... {my_list[-5:]}')
 
 
 def process_ambers():
@@ -93,8 +94,9 @@ def main():
     """
     words = import_system_words()
     # words = import_wordle_words()
-    summarise_list(words)
-    # wordle_words = import_wordle_words()
+    summarise_list('All possible words', words)
+    wordle_words = import_wordle_words()
+    summarise_list('Wordle Words', wordle_words)
     #
     # 1. Eliminate the words with black letters
     # 2. only include the words with amber or green letters
@@ -112,11 +114,13 @@ def main():
     print(amber_list)
 
     # Make the Regular Expression:
+    # This should have the green letter if there is one there, and the amber
+    # letters if not.
     regex_list = []
     # print(green_list, amber_list, chars)
     for green, amber in zip(green_list, amber_list):
         # print(green, amber)
-        if len(amber) > 0:
+        if green == '.' and len(amber) > 0:
             # print(f'AMBER: adding [{amber}]')
             regex_list.append(f'[{amber}]')
         else:
@@ -129,31 +133,38 @@ def main():
     # Make the list of remaining possible words:
     possible = []
     for word in words:
+        verdict = f'{word}:'
         word_is_possible = False
         if re.search(rf'^{regexp}$', word):
             word_is_possible = True
-        amber_matches = len(re.findall(rf'[{ambers}]', word))
+        amber_matches = len(re.findall(rf'[{ambers}]', ''.join(set(word))))
+        verdict += f' checking /{ambers}/ ({amber_matches}).'
         if amber_matches < len(ambers):
-            # verdict += f' Not enough /{ambers}/ ({amber_matches}).'
+            verdict += ' Not enough matches.'
             word_is_possible = False
+        else:
+            verdict += f' Word contains /{ambers}/ ({amber_matches}).'
         if word_is_possible:
             possible.append(word)
-            # print (word, possible)
+            # print (word, verdict)
 
-    summarise_list(possible)
-    remaining = possible
-    black_letters = params['black']
-    print(f'Can\'t include /{black_letters}/')
+    summarise_list('Remaining possible words', possible)
+    remaining = possible.copy()
+    black = params['black']
+    print(f'Can\'t include /{black}/')
     for word in possible:
         verdict = f'{word}:'
-        if re.search(rf'[A-Z{black_letters}.-]', word):
-            verdict += f' Includes one of /{black_letters}/.'
-            # print(f'{verdict}: Removing')
+        match = re.findall(rf'[A-Z{black}\.-]', word)
+        if len(match) > 0:
+            matches = [match[i] for i in range(0, len(match))]
+            verdict += f' Includes {len(match)} of /{black}/: {matches}.'
             remaining.remove(word)
+            # print(f'{verdict}: Removing {word}', remaining)
         # else:
         #     print(f'{verdict} Keeping.')
     # using numpy to format a list *might* be overkill
-    print(f'Remaining ({len(remaining)}):\n{np.array(remaining)}')
+    print(f'Final remaining word(s): ({len(remaining)}):')
+    print(np.array(remaining))
 
 
 def parse_params():
@@ -163,8 +174,7 @@ def parse_params():
     # Parse the command line for:
     # -g, --green - right letters in the right place: s...k, once only
     # -a, --amber - right letters in the wrong place, can be repeated
-    # -b, --black - wrong letters: list of the wrong letters, can be repeater
-    # FIXME: Aggregate multiple instances of the same letter?
+    # -b, --black - wrong letters: list of the wrong letters, can be repeated
     params = {'green': '.....',
               'amber': [],
               'black': ''
@@ -183,6 +193,7 @@ def parse_params():
 
         if arg in ['-b', '--black']:
             params['black'] += value
+    params['black'] = ''.join(sorted(set(params['black'])))
     print('Parameters: ', json.dumps(params, indent=4))
     return params
 
