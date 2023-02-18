@@ -111,6 +111,12 @@ def main():
         positions = [int(p) for p in list(amber[1:])]
         for position in positions:
             amber_list[position-1] += f'^{letter}'
+
+    # to handle the case where there are no amber letters:
+    if len(amber_letters) > 0:
+        ambers = ''.join(set(amber_letters))
+    else:
+        ambers = '^A-Z'
     print(amber_list)
 
     # Make the Regular Expression:
@@ -127,7 +133,6 @@ def main():
             # print(f'GREEN: adding {green}')
             regex_list.append(green)
     regexp = ''.join(regex_list)
-    ambers = ''.join(set(amber_letters))
     print(f'Searching for /{regexp}/, must include all of [{ambers}].')
 
     # Make the list of remaining possible words:
