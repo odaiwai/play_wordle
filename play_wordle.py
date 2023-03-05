@@ -132,11 +132,11 @@ def main():
     """
         Main routine.
     """
-    words = import_system_words()
-    # words = import_wordle_words()
+    if params['dict'] == 'system':
+        words = import_system_words()
+    else:
+        words = import_wordle_words()
     summarise_list('All possible words', words)
-    wordle_words = import_wordle_words()
-    summarise_list('Wordle Words', wordle_words)
     #
     # 1. Eliminate the words with black letters
     # 2. only include the words with amber or green letters
@@ -189,25 +189,29 @@ def parse_params():
         -g, --green - right letters in the right place: s...k, once only
         -a, --amber - right letters in the wrong place, can be repeated
         -b, --black - wrong letters: list of the wrong letters, can be repeated
+        -w, --wordle - : Use the World Dictionary instead of the system one
     """
     param_dict = {'green': '.....',
                   'amber': [],
-                  'black': ''
+                  'black': '',
+                  'dict': 'system'
                   }
     options = sys.argv[1:]
     while len(options) > 0:
-        arg, value = options[0], options[1]
-        options = options[2:]
+        arg = options.pop(0)
         if arg in ['-g', '--green']:
-            if len(value) == 5:
-                param_dict['green'] = value
+            green = options.pop(0)
+            if len(green) == 5:
+                param_dict['green'] = green
             else:
                 printerror('Strictly 5 letters!')
         if arg in ['-a', '--amber']:
-            param_dict['amber'].append(value)
+            param_dict['amber'].append(options.pop(0))
 
         if arg in ['-b', '--black']:
-            param_dict['black'] += value
+            param_dict['black'] += options.pop(0)
+        if arg in ['-w', '--wordle']:
+            param_dict['dict'] = 'wordle'
     param_dict['black'] = ''.join(sorted(set(param_dict['black'])))
     print('Parameters: ', json.dumps(param_dict, indent=4))
     return param_dict
