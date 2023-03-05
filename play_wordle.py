@@ -84,8 +84,48 @@ def summarise_list(caption, my_list):
 def process_ambers():
     """
     Process the parameters to provide a list of ambers as:
-        []
+        ambers: str, amber_list: list of str for each position
+        params is global
     """
+    amber_list = ['', '', '', '', '', '']
+    amber_letters = []
+    for amber in params['amber']:
+        groups = re.findall(r'[a-z][0-9]+', amber)
+        for group in groups:
+            # these are of the form: '[a-z][1-5]+', 1 more than array index
+            letter = group[0:1]
+            amber_letters.append(letter)
+            positions = [int(p) for p in list(group[1:])]
+            for position in positions:
+                amber_list[position-1] += f'^{letter}'
+
+    # to handle the case where there are no amber letters:
+    if len(amber_letters) > 0:
+        ambers = ''.join(set(amber_letters))
+    else:
+        ambers = '^A-Z'
+
+    print(amber_list)
+    return ambers, amber_list
+
+
+def make_regexp(green_list, amber_list):
+    """
+    Make the Regular Expression:
+    This should have the green letter if there is one there, and the amber
+    letters if not.
+    """
+    regex_list = []
+    # print(green_list, amber_list, chars)
+    for green, amber in zip(green_list, amber_list):
+        # print(green, amber)
+        if green == '.' and len(amber) > 0:
+            # print(f'AMBER: adding [{amber}]')
+            regex_list.append(f'[{amber}]')
+        else:
+            # print(f'GREEN: adding {green}')
+            regex_list.append(green)
+    return ''.join(regex_list)
 
 
 def main():
@@ -101,38 +141,9 @@ def main():
     # 1. Eliminate the words with black letters
     # 2. only include the words with amber or green letters
     # 3.
-    green_list = list(params['green'])
-    amber_list = ['', '', '', '', '', '']
-    amber_letters = []
-    for amber in params['amber']:
-        # these are of the form: '[a-z][1-5]+', 1 more than array index
-        letter = amber[0:1]
-        amber_letters.append(letter)
-        positions = [int(p) for p in list(amber[1:])]
-        for position in positions:
-            amber_list[position-1] += f'^{letter}'
+    ambers, amber_list = process_ambers()
 
-    # to handle the case where there are no amber letters:
-    if len(amber_letters) > 0:
-        ambers = ''.join(set(amber_letters))
-    else:
-        ambers = '^A-Z'
-    print(amber_list)
-
-    # Make the Regular Expression:
-    # This should have the green letter if there is one there, and the amber
-    # letters if not.
-    regex_list = []
-    # print(green_list, amber_list, chars)
-    for green, amber in zip(green_list, amber_list):
-        # print(green, amber)
-        if green == '.' and len(amber) > 0:
-            # print(f'AMBER: adding [{amber}]')
-            regex_list.append(f'[{amber}]')
-        else:
-            # print(f'GREEN: adding {green}')
-            regex_list.append(green)
-    regexp = ''.join(regex_list)
+    regexp = make_regexp(list(params['green']), amber_list)
     print(f'Searching for /{regexp}/, must include all of [{ambers}].')
 
     # Make the list of remaining possible words:
@@ -174,36 +185,34 @@ def main():
 
 def parse_params():
     """
-    Parse the parameters
+    Parse the command line for:
+        -g, --green - right letters in the right place: s...k, once only
+        -a, --amber - right letters in the wrong place, can be repeated
+        -b, --black - wrong letters: list of the wrong letters, can be repeated
     """
-    # Parse the command line for:
-    # -g, --green - right letters in the right place: s...k, once only
-    # -a, --amber - right letters in the wrong place, can be repeated
-    # -b, --black - wrong letters: list of the wrong letters, can be repeated
-    params = {'green': '.....',
-              'amber': [],
-              'black': ''
-              }
+    param_dict = {'green': '.....',
+                  'amber': [],
+                  'black': ''
+                  }
     options = sys.argv[1:]
     while len(options) > 0:
         arg, value = options[0], options[1]
         options = options[2:]
         if arg in ['-g', '--green']:
             if len(value) == 5:
-                params['green'] = value
+                param_dict['green'] = value
             else:
                 printerror('Strictly 5 letters!')
         if arg in ['-a', '--amber']:
-            params['amber'].append(value)
+            param_dict['amber'].append(value)
 
         if arg in ['-b', '--black']:
-            params['black'] += value
-    params['black'] = ''.join(sorted(set(params['black'])))
-    print('Parameters: ', json.dumps(params, indent=4))
-    return params
+            param_dict['black'] += value
+    param_dict['black'] = ''.join(sorted(set(param_dict['black'])))
+    print('Parameters: ', json.dumps(param_dict, indent=4))
+    return param_dict
 
 
 if __name__ == '__main__':
     params = parse_params()
     main()
-
