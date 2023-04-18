@@ -10,7 +10,7 @@ import re
 import json
 import requests
 import numpy as np
-
+from datetime import datetime
 
 def printerror(msg):
     """
@@ -60,6 +60,7 @@ def import_wordle_words():
     script = re.compile(r'\"(https://www.nytimes.com/games-assets/.*?.js)\"')
     urls = []
     words = []
+    timestamp = datetime.strftime(datetime.now(), '%Y%m%d')
     for match in script.finditer(source):
         js_url = match[1]
         # print(f'JS URL: {js_url}')
@@ -69,7 +70,10 @@ def import_wordle_words():
         lst_match = re.search(r'(\[\"[a-z]+\",.*?,\"[a-z]+\"\]),', js_source)
         if lst_match:
             words = json.loads(lst_match[1])
-            # print('{}...{}'.format(words[:5], words[-5:]))
+            print('{}...{}'.format(words[:5], words[-5:]))
+            with open(f'wordle_{timestamp}.words', 'w') as outfh:
+                outfh.write(json.dumps(words))
+
     return words
 
 
@@ -132,7 +136,7 @@ def main():
     """
         Main routine.
     """
-    if params['dict'] == 'system':
+    if params['words'] == 'system':
         words = import_system_words()
     else:
         words = import_wordle_words()
@@ -144,7 +148,7 @@ def main():
     ambers, amber_list = process_ambers()
 
     regexp = make_regexp(list(params['green']), amber_list)
-    print(f'Searching for /{regexp}/, must include all of [{ambers}].')
+    print(f'Searching for /{regexp}/, must include  any of [{ambers}] at least once.')
 
     # Make the list of remaining possible words:
     possible = []
@@ -194,7 +198,7 @@ def parse_params():
     param_dict = {'green': '.....',
                   'amber': [],
                   'black': '',
-                  'dict': 'system'
+                  'words': 'system'
                   }
     options = sys.argv[1:]
     while len(options) > 0:
@@ -211,7 +215,7 @@ def parse_params():
         if arg in ['-b', '--black']:
             param_dict['black'] += options.pop(0)
         if arg in ['-w', '--wordle']:
-            param_dict['dict'] = 'wordle'
+            param_dict['words'] = 'wordle'
     param_dict['black'] = ''.join(sorted(set(param_dict['black'])))
     print('Parameters: ', json.dumps(param_dict, indent=4))
     return param_dict
