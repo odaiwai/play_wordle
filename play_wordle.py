@@ -12,6 +12,7 @@ import requests
 import numpy as np
 # from datetime import datetime
 
+
 def printerror(msg):
     """
     Print and error message and quit
@@ -67,12 +68,14 @@ def import_wordle_words():
         urls.append(js_url)
         js_req = requests.get(js_url)
         js_source = js_req.content.decode()
-        lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),', js_source)
+        encoding = js_req.encoding
+        lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),',
+                              js_source)
         if lst_match:
             # print(lst_match[1])
             words = json.loads(lst_match[1])
-            print('{}...{}'.format(words[:5], words[-5:]))
-            with open(f'wordle.words', 'w') as outfh:
+            print(f'{words[:5]}...{words[-5:]}')
+            with open('wordle.words', 'w', encoding=encoding) as outfh:
                 outfh.write(json.dumps(words))
 
     return words
@@ -149,7 +152,8 @@ def main():
     ambers, amber_list = process_ambers()
 
     regexp = make_regexp(list(params['green']), amber_list)
-    print(f'Searching for /{regexp}/, must include  any of [{ambers}] at least once.')
+    print((f'Searching for /{regexp}/, '
+           f'must include any of [{ambers}] at least once.'))
 
     # Make the list of remaining possible words:
     possible = []
