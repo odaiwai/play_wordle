@@ -10,7 +10,7 @@ import re
 import json
 import requests
 import numpy as np
-from datetime import datetime
+# from datetime import datetime
 
 def printerror(msg):
     """
@@ -60,18 +60,19 @@ def import_wordle_words():
     script = re.compile(r'\"(https://www.nytimes.com/games-assets/.*?.js)\"')
     urls = []
     words = []
-    timestamp = datetime.strftime(datetime.now(), '%Y%m%d')
+    # timestamp = datetime.strftime(datetime.now(), '%Y%m%d')
     for match in script.finditer(source):
         js_url = match[1]
         # print(f'JS URL: {js_url}')
         urls.append(js_url)
         js_req = requests.get(js_url)
         js_source = js_req.content.decode()
-        lst_match = re.search(r'(\[\"[a-z]+\",.*?,\"[a-z]+\"\]),', js_source)
+        lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),', js_source)
         if lst_match:
+            # print(lst_match[1])
             words = json.loads(lst_match[1])
             print('{}...{}'.format(words[:5], words[-5:]))
-            with open(f'wordle_{timestamp}.words', 'w') as outfh:
+            with open(f'wordle.words', 'w') as outfh:
                 outfh.write(json.dumps(words))
 
     return words
