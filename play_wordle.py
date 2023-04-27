@@ -4,13 +4,11 @@
 
 """
 
-# import os
 import sys
 import re
 import json
 import requests
 import numpy as np
-# from datetime import datetime
 
 
 def printerror(msg):
@@ -31,7 +29,7 @@ def import_system_words():
         for line in lines:
             if re.match(r'^[a-z]{5}$', line.strip('\n')):
                 all_words.append(line.strip('\n'))
-    # print(all_words, len(all_words))
+
     return all_words
 
 
@@ -45,12 +43,6 @@ def import_wordle_words():
 
     the JS scripts look like this:
         src="https://www.nytimes.com/games-assets/v2/699.65b76772350e4f407ad2.js">
-        src="https://www.nytimes.com/games-assets/v2/194.394a5bff81f32b6c09f6.js">
-        src="https://www.nytimes.com/games-assets/v2/926.9ac55785ede32158ab6a.js">
-        src="https://www.nytimes.com/games-assets/v2/940.510e557a044c374bfb56.js">
-        src="https://www.nytimes.com/games-assets/v2/382.e39eda995c75e1cb9ce9.js">
-        src="https://www.nytimes.com/games-assets/v2/621.a4a0ec303e0ca48bdd3e.js">
-        src="https://www.nytimes.com/games-assets/v2/931.794bf8ab6514c5b4a826.js">
         src="https://www.nytimes.com/games-assets/v2/202.2c26bc40168ecbf65013.js">
         src="https://www.nytimes.com/games-assets/v2/wordle.d8eba58d244471b4cafe.js">
     """
@@ -64,7 +56,6 @@ def import_wordle_words():
     # timestamp = datetime.strftime(datetime.now(), '%Y%m%d')
     for match in script.finditer(source):
         js_url = match[1]
-        # print(f'JS URL: {js_url}')
         urls.append(js_url)
         js_req = requests.get(js_url)
         js_source = js_req.content.decode()
@@ -72,7 +63,6 @@ def import_wordle_words():
         lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),',
                               js_source)
         if lst_match:
-            # print(lst_match[1])
             words = json.loads(lst_match[1])
             print(f'{words[:5]}...{words[-5:]}')
             with open('wordle.words', 'w', encoding=encoding) as outfh:
@@ -124,14 +114,10 @@ def make_regexp(green_list, amber_list):
     letters if not.
     """
     regex_list = []
-    # print(green_list, amber_list, chars)
     for green, amber in zip(green_list, amber_list):
-        # print(green, amber)
         if green == '.' and len(amber) > 0:
-            # print(f'AMBER: adding [{amber}]')
             regex_list.append(f'[{amber}]')
         else:
-            # print(f'GREEN: adding {green}')
             regex_list.append(green)
     return ''.join(regex_list)
 
@@ -145,10 +131,9 @@ def main():
     else:
         words = import_wordle_words()
     summarise_list('All possible words', words)
-    #
+
     # 1. Eliminate the words with black letters
     # 2. only include the words with amber or green letters
-    # 3.
     ambers, amber_list = process_ambers()
 
     regexp = make_regexp(list(params['green']), amber_list)
@@ -171,7 +156,6 @@ def main():
             verdict += f' Word contains /{ambers}/ ({amber_matches}).'
         if word_is_possible:
             possible.append(word)
-            # print (word, verdict)
 
     summarise_list('Remaining possible words', possible)
     remaining = possible.copy()
@@ -184,9 +168,7 @@ def main():
             matches = [match[i] for i in range(0, len(match))]
             verdict += f' Includes {len(match)} of /{black}/: {matches}.'
             remaining.remove(word)
-            # print(f'{verdict}: Removing {word}', remaining)
-        # else:
-        #     print(f'{verdict} Keeping.')
+
     # using numpy to format a list *might* be overkill
     print(f'Final remaining word(s): ({len(remaining)}):')
     print(np.array(remaining))
