@@ -2,8 +2,8 @@
 """
     Script to help with Wordle
 
+    Dave O'Brien 2023
 """
-
 import sys
 import re
 import json
