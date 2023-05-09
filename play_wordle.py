@@ -192,7 +192,7 @@ def parse_params():
         arg = options.pop(0)
         if arg in ['-g', '--green']:
             green = options.pop(0)
-            if len(green) == 5:
+            if re.match(r'^[a-z.]{5}$', green):
                 param_dict['green'] = green
             else:
                 printerror('Strictly 5 letters!')
