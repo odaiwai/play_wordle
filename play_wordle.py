@@ -78,6 +78,27 @@ def summarise_list(caption, my_list):
     print(f'{caption} ({len(my_list)}):',
           f'{my_list[:5]} ... {my_list[-5:]}')
 
+def process_greens():
+    """
+    process the green list to make a regexp like the amber list
+    """
+    green_list = ['', '', '', '', '']
+    green_letters = []
+    for green in params['green']:
+        groups = re.findall(r'[a-z][0-9]+', green)
+        for group in groups:
+            # these are of the form: '[a-z][1-5]+', 1 more than array index
+            letter = group[0:1]
+            green_letters.append(letter)
+            positions = [int(p) for p in list(group[1:])]
+            for position in positions:
+                green_list[position-1] += f'{letter}'
+
+    # to handle the case where there are no green letters:
+    greens = ''.join(set(green_letters))
+    # print('green', green_list, greens)
+    return greens, green_list
+
 
 def process_ambers():
     """
@@ -85,7 +106,7 @@ def process_ambers():
         ambers: str, amber_list: list of str for each position
         params is global
     """
-    amber_list = ['', '', '', '', '', '']
+    amber_list = ['', '', '', '', '']
     amber_letters = []
     for amber in params['amber']:
         groups = re.findall(r'[a-z][0-9]+', amber)
@@ -107,18 +128,22 @@ def process_ambers():
     return ambers, amber_list
 
 
-def make_regexp(green_list, amber_list):
+def make_regexp(grexp_list, green_list, amber_list):
     """
     Make the Regular Expression:
     This should have the green letter if there is one there, and the amber
     letters if not.
     """
     regex_list = []
-    for green, amber in zip(green_list, amber_list):
-        if green == '.' and len(amber) > 0:
-            regex_list.append(f'[{amber}]')
+    for grexp, green, amber in zip(grexp_list, green_list, amber_list):
+        if grexp == '.':
+            if green == '.':
+                if len(amber) > 0:
+                    regex_list.append(f'[{amber}]')
+            else:
+                regex_list.append(green)
         else:
-            regex_list.append(green)
+            regex_list.append(grexp)
     return ''.join(regex_list)
 
 
@@ -135,8 +160,9 @@ def main():
     # 1. Eliminate the words with black letters
     # 2. only include the words with amber or green letters
     ambers, amber_list = process_ambers()
+    greens, green_list = process_greens()
 
-    regexp = make_regexp(list(params['green']), amber_list)
+    regexp = make_regexp(list(params['grexp']), green_list, amber_list)
     print((f'Searching for /{regexp}/, '
            f'must include any of [{ambers}] at least once.'))
 
@@ -177,12 +203,14 @@ def main():
 def parse_params():
     """
     Parse the command line for:
-        -g, --green - right letters in the right place: s...k, once only
-        -a, --amber - right letters in the wrong place, can be repeated
+        -g, --grexp - right letters in the right place: s...k, once only
+        -g, --green - right letters in the right place, can be repeated
+        -g, --grexp - right letters in the right place: s...k, once only
         -b, --black - wrong letters: list of the wrong letters, can be repeated
         -w, --wordle - : Use the World Dictionary instead of the system one
     """
-    param_dict = {'green': '.....',
+    param_dict = {'grexp': '.....',
+                  'green': [],
                   'amber': [],
                   'black': '',
                   'words': 'system'
@@ -193,9 +221,10 @@ def parse_params():
         if arg in ['-g', '--green']:
             green = options.pop(0)
             if re.match(r'^[a-z.]{5}$', green):
-                param_dict['green'] = green
+                # a standard green regexp
+                param_dict['grexp'] = green
             else:
-                printerror('Strictly 5 letters!')
+                param_dict['green'].append(green)
         if arg in ['-a', '--amber']:
             param_dict['amber'].append(options.pop(0))
 
