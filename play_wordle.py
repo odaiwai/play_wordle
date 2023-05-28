@@ -47,7 +47,7 @@ def import_wordle_words():
         src="https://www.nytimes.com/games-assets/v2/wordle.d8eba58d244471b4cafe.js">
     """
     url = r'https://www.nytimes.com/games/wordle/index.html'
-    response = requests.get(url)
+    response = requests.get(url, timeout=30)
     source = response.content.decode()
     # Look for Variables
     script = re.compile(r'\"(https://www.nytimes.com/games-assets/.*?.js)\"')
@@ -57,7 +57,7 @@ def import_wordle_words():
     for match in script.finditer(source):
         js_url = match[1]
         urls.append(js_url)
-        js_req = requests.get(js_url)
+        js_req = requests.get(js_url, timeout=30)
         js_source = js_req.content.decode()
         encoding = js_req.encoding
         lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),',
@@ -71,12 +71,13 @@ def import_wordle_words():
     return words
 
 
-def summarise_list(caption, my_list):
+def summarise_list(caption, my_list, ins_outs=5):
     """
     Summarise a list with the length, first and last elements
     """
     print(f'{caption} ({len(my_list)}):',
-          f'{my_list[:5]} ... {my_list[-5:]}')
+          f'{my_list[:ins_outs]} ... {my_list[-ins_outs:]}')
+
 
 def process_greens():
     """
@@ -92,11 +93,10 @@ def process_greens():
             green_letters.append(letter)
             positions = [int(p) for p in list(group[1:])]
             for position in positions:
+                # Can only have one green
                 green_list[position-1] += f'{letter}'
 
-    # to handle the case where there are no green letters:
     greens = ''.join(set(green_letters))
-    # print('green', green_list, greens)
     return greens, green_list
 
 
@@ -123,8 +123,6 @@ def process_ambers():
         ambers = ''.join(set(amber_letters))
     else:
         ambers = '^A-Z'
-
-    print(amber_list)
     return ambers, amber_list
 
 
@@ -136,14 +134,14 @@ def make_regexp(grexp_list, green_list, amber_list):
     """
     regex_list = []
     for grexp, green, amber in zip(grexp_list, green_list, amber_list):
-        if grexp == '.':
-            if green == '.':
-                if len(amber) > 0:
-                    regex_list.append(f'[{amber}]')
-            else:
-                regex_list.append(green)
-        else:
+        if grexp != '.':
             regex_list.append(grexp)
+        elif green != '':
+            regex_list.append(f'[{green}]')
+        elif len(amber) > 0:
+            regex_list.append(f'[{amber}]')
+        else:
+            regex_list.append('.')
     return ''.join(regex_list)
 
 
@@ -161,6 +159,7 @@ def main():
     # 2. only include the words with amber or green letters
     ambers, amber_list = process_ambers()
     greens, green_list = process_greens()
+    print(f'Ambers: {amber_list}, Greens: {green_list}')
 
     regexp = make_regexp(list(params['grexp']), green_list, amber_list)
     print((f'Searching for /{regexp}/, '
