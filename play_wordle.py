@@ -10,7 +10,6 @@ import json
 import requests
 import numpy as np
 
-
 def printerror(msg):
     """
     Print and error message and quit
@@ -206,7 +205,7 @@ def parse_params():
         -g, --green - right letters in the right place, can be repeated
         -g, --grexp - right letters in the right place: s...k, once only
         -b, --black - wrong letters: list of the wrong letters, can be repeated
-        -w, --wordle - : Use the World Dictionary instead of the system one
+        -w, --wordle - : Use the Wordle Dictionary instead of the system one
     """
     param_dict = {'grexp': '.....',
                   'green': [],
