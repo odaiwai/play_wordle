@@ -10,6 +10,7 @@ import json
 import requests
 import numpy as np
 
+
 def printerror(msg):
     """
     Print and error message and quit
@@ -29,6 +30,21 @@ def import_system_words():
             if re.match(r'^[a-z]{5}$', line.strip('\n')):
                 all_words.append(line.strip('\n'))
 
+    return all_words
+
+
+def import_local_wordle_words():
+    """
+    Import all 5 letter words from the system Dictionary
+    """
+    all_words = []
+    try:
+        with open('./wordle.words', 'r', encoding='utf8') as infh:
+            all_words = json.loads(infh.read())
+    except FileNotFoundError:
+        print(('Local wordle.words file not found.\n'
+               'Try with --system/-s or --wordle/-w.'))
+        all_words = []
     return all_words
 
 
@@ -150,6 +166,8 @@ def main():
     """
     if params['words'] == 'system':
         words = import_system_words()
+    elif params['words'] == 'local':
+        words = import_local_wordle_words()
     else:
         words = import_wordle_words()
     summarise_list('All possible words', words)
@@ -205,13 +223,15 @@ def parse_params():
         -g, --green - right letters in the right place, can be repeated
         -g, --grexp - right letters in the right place: s...k, once only
         -b, --black - wrong letters: list of the wrong letters, can be repeated
-        -w, --wordle - : Use the Wordle Dictionary instead of the system one
+        -w, --wordle - : Use the NYTimes Wordle words instead of the system one
+        -l, --local - : Use the local Wordle words file instead of the system
+        -s, --system - : Use the system Dictionary
     """
     param_dict = {'grexp': '.....',
                   'green': [],
                   'amber': [],
                   'black': '',
-                  'words': 'system'
+                  'words': 'local'
                   }
     options = sys.argv[1:]
     while len(options) > 0:
@@ -230,6 +250,8 @@ def parse_params():
             param_dict['black'] += options.pop(0)
         if arg in ['-w', '--wordle']:
             param_dict['words'] = 'wordle'
+        if arg in ['-s', '--system']:
+            param_dict['words'] = 'system'
     param_dict['black'] = ''.join(sorted(set(param_dict['black'])))
     print('Parameters: ', json.dumps(param_dict, indent=4))
     return param_dict
