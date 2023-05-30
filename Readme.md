@@ -3,6 +3,7 @@
 Use regexps to show remaining options for Wordle.
 
 Use the options:
+
 `-g | --green "....."` A positional regex with the green letters in the right place
                         position would be "..x..", if x is letter 3.
 
