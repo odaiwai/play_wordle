@@ -27,16 +27,18 @@ Use the options:
                         to the local files `wordle.words` once it is retrieved and
                         can be reused using the `--local` default.
 
-   -s |  --system       Use the system dictionary if available. This is expected in
+`-s |  --system`       Use the system dictionary if available. This is expected in
                         /usr/share/dict/words. This may be slightly different from
                         the Wordle list and has proper nouns in it. The app makes
                         a list of all of the five letter words from the system 
                         dict.
 
-   -l | --local         Use the local copy of the Wordle Words file if it exists. 
+`-l | --local`         Use the local copy of the Wordle Words file if it exists. 
                         This is now the default option.
 
-    e.g.$./play_wordle.py -w -b atne -a o3 -b sup -g .o... 
+e.g.
+
+    $./play_wordle.py -w -b atne -a o3 -b sup -g .o... 
     Parameters:  {
         "green": ".og..",
         "amber": [
