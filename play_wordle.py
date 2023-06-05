@@ -35,7 +35,7 @@ def import_system_words():
 
 def import_local_wordle_words():
     """
-    Import all 5 letter words from the system Dictionary
+    Import all 5 letter words from the local backup of Wordle words
     """
     all_words = []
     try:
