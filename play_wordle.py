@@ -42,8 +42,8 @@ def import_local_wordle_words():
         with open('./wordle.words', 'r', encoding='utf8') as infh:
             all_words = json.loads(infh.read())
     except FileNotFoundError:
-        print(('Local wordle.words file not found.\n'
-               'Try with --system/-s or --wordle/-w.'))
+        print('Local wordle.words file not found.\n'
+              'Try with --system/-s or --wordle/-w.')
         all_words = []
     return all_words
 
@@ -176,7 +176,7 @@ def main():
     # 2. only include the words with amber or green letters
     ambers, amber_list = process_ambers()
     greens, green_list = process_greens()
-    print(f'Ambers: {amber_list}, Greens: {green_list}')
+    print(f'Ambers: {amber_list}, {ambers}, Greens: {green_list}, {greens}')
 
     regexp = make_regexp(list(params['grexp']), green_list, amber_list)
     print((f'Searching for /{regexp}/, '
