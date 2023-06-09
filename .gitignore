@@ -3,3 +3,5 @@ tags
 *.swp
 *~
 wordle_*.words
+urls/
+*.nums
