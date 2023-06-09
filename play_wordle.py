@@ -66,23 +66,30 @@ def import_wordle_words():
     source = response.content.decode()
     # Look for Variables
     script = re.compile(r'\"(https://www.nytimes.com/games-assets/.*?.js)\"')
+    numlists = re.compile(r'=(\[[0-9]+,[0-9,]+,[0-9]+\]),')
+    wordlists = re.compile(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),')
     urls = []
     words = []
     # timestamp = datetime.strftime(datetime.now(), '%Y%m%d')
-    for match in script.finditer(source):
+    for idx, match in enumerate(script.finditer(source)):
         js_url = match[1]
         urls.append(js_url)
         js_req = requests.get(js_url, timeout=30)
         js_source = js_req.content.decode()
         encoding = js_req.encoding
-        lst_match = re.search(r'=(\[\"[a-z]{5}\",.*?,\"[a-z]{5}\"\]),',
-                              js_source)
-        if lst_match:
-            words = json.loads(lst_match[1])
-            print(f'{words[:5]}...{words[-5:]}')
+        with open(f'urls/{idx}.js', 'w', encoding=encoding) as outfh:
+            outfh.write(js_source)
+        for idx1, wordlist in enumerate(wordlists.finditer(js_source)):
+            words = json.loads(wordlist[1])
+            print(f'{idx1}: {words[:5]}...{words[-5:]}')
             with open('wordle.words', 'w', encoding=encoding) as outfh:
                 outfh.write(json.dumps(words))
-
+        for idx1, numlist in enumerate(numlists.finditer(js_source)):
+            print(idx1, numlist)
+            nums = json.loads(numlist[1])
+            print(f'{idx1}: {nums[:5]}...{nums[-5:]}')
+            with open(f'wordle.{idx1}.nums', 'w', encoding=encoding) as outfh:
+                outfh.write(json.dumps(nums))
     return words
 
 
