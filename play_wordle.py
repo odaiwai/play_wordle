@@ -109,7 +109,9 @@ def process_greens():
                 # Can only have one green
                 green_list[position-1] += f'{letter}'
 
+    # TODO: Check for multiple green letters in one position
     greens = ''.join(set(green_letters))
+    check_conflict('Green', greens, 'Black', params['black'])
     return greens, green_list
 
 
@@ -136,7 +138,18 @@ def process_ambers():
         ambers = ''.join(set(amber_letters))
     else:
         ambers = '^A-Z'
+    check_conflict('Amber', ambers, 'Black', params['black'])
     return ambers, amber_list
+
+
+def check_conflict(name1: str, list1: list, name2: str, list2: list) -> None:
+    """
+    check if an item from list1 is in list 2 and quit if true
+    """
+    for member in list1:
+        if member in list(list2):
+            print(f'CONFLICT: {name1} Letter /{member}/ in {name2} /{list2}/')
+            exit()
 
 
 def make_regexp(grexp_list, green_list, amber_list):
