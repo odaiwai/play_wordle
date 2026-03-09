@@ -228,15 +228,17 @@ def main():
 
 
 def parse_params():
-    """
+    """Parse the command line."""
+    usage = """
     Parse the command line for:
         -g, --grexp - right letters in the right place: s...k, once only
         -g, --green - right letters in the right place, can be repeated
-        -g, --grexp - right letters in the right place: s...k, once only
+        -a, --amber - right letters in the wrong place: [A-Z][0-9]+, repeated.
         -b, --black - wrong letters: list of the wrong letters, can be repeated
-        -w, --wordle - : Use the NYTimes Wordle words instead of the system one
-        -l, --local - : Use the local Wordle words file instead of the system
-        -s, --system - : Use the system Dictionary
+        -w, --wordle - Use the NYTimes Wordle words instead of the system one
+        -l, --local - Use the local Wordle words file instead of the system
+        -s, --system - Use the system Dictionary
+        -h, --help: print this message and exit
     """
     param_dict = {'grexp': '.....',
                   'green': [],
@@ -263,6 +265,9 @@ def parse_params():
             param_dict['words'] = 'wordle'
         if arg in ['-s', '--system']:
             param_dict['words'] = 'system'
+        if arg in ['-h', '--help']:
+            print(usage)
+            sys.exit()
     param_dict['black'] = ''.join(sorted(set(param_dict['black'])))
     print('Parameters: ', json.dumps(param_dict, indent=4))
     return param_dict
