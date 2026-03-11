@@ -4,11 +4,12 @@
 
     Dave O'Brien 2023
 """
-import sys
-import re
 import json
-import requests
+import re
+import sys
+
 import numpy as np
+import requests
 
 
 def printerror(msg):
