@@ -38,9 +38,9 @@ Use the options:
 
 e.g.
 
-    $./play_wordle.py -w -b atne -a o3 -b sup -g .o...
+    $./play_wordle.py -w -b atne -a o3 -b sup -g .og..
     Parameters:  {
-        "green": ".o...",
+        "green": ".og..",
         "amber": [
             "o3"
         ],
