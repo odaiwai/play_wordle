@@ -172,6 +172,14 @@ def make_regexp(grexp_list, green_list, amber_list):
     return ''.join(regex_list)
 
 
+def letter_distribution(strings: list) -> str:
+    letters = {}
+    for word in strings:
+        for letter in word:
+            letters[letter] = letters.get(letter, 0) + 1
+    return json.dumps(letters, indent=4)
+
+
 def main():
     """
         Main routine.
@@ -226,6 +234,7 @@ def main():
     # using numpy to format a list *might* be overkill
     print(f'Final remaining word(s): ({len(remaining)}):')
     print(np.array(remaining))
+    print(letter_distribution(remaining))
 
 
 def parse_params():
@@ -233,9 +242,10 @@ def parse_params():
     usage = """
     Parse the command line for:
         -g, --grexp - right letters in the right place: s...k, once only
-        -g, --green - right letters in the right place, can be repeated
-        -a, --amber - right letters in the wrong place: [A-Z][0-9]+, repeated.
-        -b, --black - wrong letters: list of the wrong letters, can be repeated
+        -g, --green - right letters in the right place, can be repeated ([a-z][0-5]+)
+        -a, --amber - right letters in the wrong place: ([A-Z][0-9]+), repeated.
+        -b, --black - wrong letters: list of the wrong letters, can be repeated ([a-z]+)
+        -t, --try   - A try: word/results e.g.ADIEU/BBBGB (Green letter in p4)
         -w, --wordle - Use the NYTimes Wordle words instead of the system one
         -l, --local - Use the local Wordle words file instead of the system
         -s, --system - Use the system Dictionary
@@ -259,6 +269,21 @@ def parse_params():
                 param_dict['green'].append(green)
         if arg in ['-a', '--amber']:
             param_dict['amber'].append(options.pop(0))
+
+        if arg in ['-t', '--try']:
+            guess, result = options.pop(0).lower().split('/')
+            idx = 1
+            for letter, colour in zip(guess, result):
+                if colour == 'b':
+                    param_dict['black'] += letter
+                elif colour == 'a':
+                    param_dict['amber'].append(f'{letter}{idx}')
+                elif colour == 'g':
+                    param_dict['green'].append(f'{letter}{idx}')
+                else:
+                    print(f'Unknown Colour: {colour} for {letter}.')
+                    exit()
+                idx += 1
 
         if arg in ['-b', '--black']:
             param_dict['black'] += options.pop(0)
