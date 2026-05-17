@@ -112,7 +112,6 @@ def process_greens():
 
     # TODO: Check for multiple green letters in one position
     greens = ''.join(set(green_letters))
-    check_conflict('Green', greens, 'Black', params['black'])
     return greens, green_list
 
 
@@ -139,7 +138,6 @@ def process_ambers():
         ambers = ''.join(set(amber_letters))
     else:
         ambers = '^A-Z'
-    check_conflict('Amber', ambers, 'Black', params['black'])
     return ambers, amber_list
 
 
@@ -196,6 +194,15 @@ def main():
     # 2. only include the words with amber or green letters
     ambers, amber_list = process_ambers()
     greens, green_list = process_greens()
+    black = [l for l in params['black']
+             if l not in greens and
+             l not in ambers]
+    print(greens, ambers, black)
+    check_conflict('Green', greens, 'Black', black)
+    check_conflict('Amber', ambers, 'Black', black)
+
+    print(f'Can\'t include /{black}/')
+
     print(f'Ambers: {amber_list}, {ambers}, Greens: {green_list}, {greens}')
 
     regexp = make_regexp(list(params['grexp']), green_list, amber_list)
@@ -221,8 +228,6 @@ def main():
 
     summarise_list('Remaining possible words', possible)
     remaining = possible.copy()
-    black = params['black']
-    print(f'Can\'t include /{black}/')
     for word in possible:
         verdict = f'{word}:'
         match = re.findall(rf'[A-Z{black}\.-]', word)
@@ -241,10 +246,10 @@ def parse_params():
     """Parse the command line."""
     usage = """
     Parse the command line for:
-        -g, --grexp - right letters in the right place: s...k, once only
-        -g, --green - right letters in the right place, can be repeated ([a-z][0-5]+)
-        -a, --amber - right letters in the wrong place: ([A-Z][0-9]+), repeated.
-        -b, --black - wrong letters: list of the wrong letters, can be repeated ([a-z]+)
+        -g, --grexp - right letters, right place: s...k, once only
+        -g, --green - right letters, right place, can repeat ([a-z][0-5]+)
+        -a, --amber - right letters, wrong place: ([A-Z][0-9]+), repeated.
+        -b, --black - wrong letters: can be repeated ([a-z]+)
         -t, --try   - A try: word/results e.g.ADIEU/BBBGB (Green letter in p4)
         -w, --wordle - Use the NYTimes Wordle words instead of the system one
         -l, --local - Use the local Wordle words file instead of the system
